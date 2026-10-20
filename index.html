@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON Hacker Pro</title>
+<style>
+:root {
+  --green: #42ff78;
+  --line: rgba(48,255,105,.3);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #010402;
+  color: var(--green);
+  font-family: Consolas, "Courier New", monospace;
+}
+body {
+  background: radial-gradient(ellipse at center,
+    #03190a 0%, #010402 75%);
+}
+.app {
+  height: 100vh; padding: 2vh 2vw;
+  display: grid; grid-template-rows: auto 1fr auto;
+  gap: 1.5vh;
+}
+header {
+  display: flex; justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: clamp(10px,.9vw,15px);
+  letter-spacing: .12em;
+  text-shadow: 0 0 10px #00ff55;
+}
+.layout {
+  display: grid; min-height: 0;
+  grid-template-columns: 1.2fr 1fr;
+  grid-template-rows: 1fr 1fr; gap: 1.2vw;
+}
+.panel {
+  min-width: 0; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--line);
+  background: rgba(0,10,4,.9);
+  box-shadow: inset 0 0 25px #05200b,
+              0 0 20px rgba(0,255,70,.05);
+}
+.panelhead {
+  padding: 10px 13px;
+  background: rgba(10,55,25,.4);
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+  font-size: clamp(9px,.72vw,13px);
+  color: #a1ffb8;
+}
+.terminal {
+  padding: 1.2vh 1vw;
+  flex: 1; min-height: 0; overflow: hidden;
+  font-size: clamp(10px,.82vw,14px);
+  line-height: 1.55;
+  text-shadow: 0 0 7px rgba(54,255,118,.22);
+}
+.line { overflow-wrap: anywhere; min-height: 1.4em; }
+.dim { color: #23894a; }
+.output { color: #65ce85; }
+.white { color: #d8ffe2; }
+.path { color: #35db6c; }
+.cursor {
+  display: inline-block; width: .58em; height: 1em;
+  vertical-align: -.13em; background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink .8s steps(2,start) infinite;
+}
+@keyframes blink { to { visibility: hidden; } }
+.metrics {
+  padding: 12px; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 10px;
+  flex: 1;
+}
+.metric {
+  border: 1px solid rgba(55,255,115,.18);
+  background: rgba(0,38,13,.25); padding: 10px;
+}
+.label {
+  font-size: clamp(9px,.65vw,11px);
+  color: #43a963; letter-spacing: .1em;
+}
+.value {
+  font-size: clamp(18px,1.8vw,32px);
+  color: #bdffcc; margin: 8px 0;
+  text-shadow: 0 0 12px rgba(54,255,118,.3);
+}
+.track { height: 5px; background: #092c14; }
+.fill {
+  height: 100%; width: 40%;
+  background: linear-gradient(90deg,#0e9d3c,#7bffa1);
+  box-shadow: 0 0 9px #19e65a;
+  transition: width .5s;
+}
+.sub { font-size: 10px; color: #2a9b50; margin-top: 7px; }
+.graph {
+  display: flex; align-items: end; gap: 3px;
+  height: 65px; padding: 7px 12px;
+}
+.bar {
+  flex: 1; background: linear-gradient(to top,#087b32,#4bff82);
+  box-shadow: 0 0 7px rgba(54,255,118,.2);
+  transition: height .4s;
+}
+footer {
+  display: flex; justify-content: space-between;
+  gap: 10px; border-top: 1px solid var(--line);
+  padding-top: 10px; color: #23894a;
+  font-size: clamp(8px,.62vw,11px);
+  letter-spacing: .08em;
+}
+@media(max-width:800px) {
+  .layout { gap: 8px; }
+  .terminal { font-size: 10px; }
+  .panelhead { padding: 7px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span>● NEON // NIGHTSHIFT v5.0</span>
+    <span>SECURE SESSION &nbsp; <span id="clock"></span></span>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="panelhead">
+        <span>root@nightshift: ~/core-engine</span>
+        <span>TTY-01</span>
+      </div>
+      <div class="terminal" id="term1">
+        <div class="line dim">NEON SHELL — LOCAL VISUAL SESSION</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panelhead">
+        <span>SYS.MONITOR // LIVE METRICS</span>
+        <span>● ACTIVE</span>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="label">CPU LOAD</div>
+          <div class="value" id="cpu">28%</div>
+          <div class="track"><div class="fill" id="cpuBar"></div></div>
+          <div class="sub">8 threads detected</div>
+        </div>
+        <div class="metric">
+          <div class="label">MEMORY</div>
+          <div class="value" id="mem">46%</div>
+          <div class="track"><div class="fill" id="memBar"></div></div>
+          <div class="sub">allocation monitor</div>
+        </div>
+        <div class="metric">
+          <div class="label">NETWORK FLOW</div>
+          <div class="value" id="net">82 MB/s</div>
+          <div class="track"><div class="fill" id="netBar"></div></div>
+          <div class="sub">simulated traffic</div>
+        </div>
+        <div class="metric">
+          <div class="label">PROCESSES</div>
+          <div class="value" id="proc">128</div>
+          <div class="track"><div class="fill" id="procBar"></div></div>
+          <div class="sub">heartbeat OK</div>
+        </div>
+      </div>
+      <div class="panelhead">
+        <span>THROUGHPUT / SEC</span>
+        <span id="throughput">72.4%</span>
+      </div>
+      <div class="graph" id="graph"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panelhead">
+        <span>root@nightshift: ~/deploy</span>
+        <span>TTY-02</span>
+      </div>
+      <div class="terminal" id="term2"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panelhead">
+        <span>EVENT STREAM // TAIL -F</span>
+        <span>● STREAMING</span>
+      </div>
+      <div class="terminal" id="term3"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>VISUAL SIMULATION // LOCAL ONLY</span>
+    <span>NO REMOTE CONNECTIONS</span>
+    <span>GREEN PHOSPHOR DISPLAY</span>
+  </footer>
+</div>
+
+<script>
+// Nur Animation: Es werden keine Befehle ausgeführt.
+const jobs1 = [
+ ["git status --short --branch",[
+   "## main...origin/main"," M src/renderer.ts","?? modules/stream/"]],
+ ["npm run build -- --production",[
+   "> compiling workspace modules...","✓ 248 modules transformed",
+   "✓ production bundle generated"]],
+ ["docker compose ps",[
+   "api-gateway       Up 14 minutes","cache-node        Up 14 minutes",
+   "worker-01         Up 13 minutes"]],
+ ["python -m pytest tests/ -q",[
+   "................................","36 passed in 2.41s"]],
+ ["tail -n 4 logs/system.log",[
+   "[INFO] healthcheck: all systems operational",
+   "[INFO] cache hit ratio: 98.7%","[OK] task queue synchronized"]],
+ ["git log -3 --oneline",[
+   "9f3a1c7 optimize event stream buffering",
+   "2b81e44 add retry handler","71ac09d refactor terminal renderer"]]
+];
+
+const jobs2 = [
+ ["./deploy.sh --target=staging",[
+   "[1/4] validating package","[2/4] preparing assets",
+   "[3/4] running checks","[4/4] deployment simulation complete"]],
+ ["git diff --stat",[
+   "src/core.ts       | 18 ++++++++----",
+   "src/cache.ts      |  7 ++++--","2 files changed"]],
+ ["node scripts/healthcheck.js",[
+   "[OK] api response: 24ms","[OK] cache status: healthy",
+   "[OK] worker pool: ready"]],
+ ["npm audit --omit=dev",[
+   "checking sample dependency report...",
+   "found 0 known issues in sample report"]]
+];
+
+const wait = ms => new Promise(resolve => setTimeout(resolve,ms));
+
+function addLine(id,text,cls="output") {
+  const el=document.createElement("div");
+  el.className="line "+cls;
+  el.textContent=text;
+  const box=document.getElementById(id);
+  box.appendChild(el);
+  while(box.children.length>12) box.removeChild(box.firstChild);
+  box.scrollTop=box.scrollHeight;
+}
+
+async function runTerminal(id,jobs,path) {
+  let i=0;
+  while(true) {
+    const [command,output]=jobs[i%jobs.length];
+    const row=document.createElement("div");
+    row.className="line";
+    const prompt=document.createElement("span");
+    prompt.className="dim";
+    prompt.textContent="root@nightshift:";
+    const folder=document.createElement("span");
+    folder.className="path";
+    folder.textContent=path;
+    const dollar=document.createElement("span");
+    dollar.className="dim";
+    dollar.textContent=" $ ";
+    const typed=document.createElement("span");
+    typed.className="white";
+    const cursor=document.createElement("span");
+    cursor.className="cursor";
+    row.append(prompt,folder,dollar,typed,cursor);
+    document.getElementById(id).appendChild(row);
+
+    for(const char of command) {
+      typed.textContent+=char;
+      await wait(28+Math.random()*42);
+    }
+    cursor.remove();
+    await wait(300);
+
+    for(const text of output) {
+      addLine(id,text);
+      await wait(160+Math.random()*160);
+    }
+    addLine(id,"","dim");
+    i++;
+    await wait(600+Math.random()*600);
+  }
+}
+
+runTerminal("term1",jobs1,"~/core-engine");
+runTerminal("term2",jobs2,"~/deploy");
+
+const events=[
+ "[OK] renderer frame stable",
+ "[INFO] buffer flush complete",
+ "[OK] local process heartbeat",
+ "[INFO] cache refreshed",
+ "[OK] service check passed",
+ "[INFO] sample queue synchronized",
+ "[INFO] visual stream updated"
+];
+setInterval(()=>{
+  const t=new Date().toLocaleTimeString("de-DE");
+  addLine("term3",t+" "+events[Math.floor(Math.random()*events.length)]);
+},900);
+
+function update() {
+  document.getElementById("clock").textContent=
+    new Date().toLocaleTimeString("de-DE");
+  const values={
+    cpu:8+Math.floor(Math.random()*70),
+    mem:28+Math.floor(Math.random()*60),
+    net:12+Math.floor(Math.random()*88),
+    proc:90+Math.floor(Math.random()*90)
+  };
+  for(const [key,val] of Object.entries(values)) {
+    document.getElementById(key).textContent=
+      key==="net" ? val+" MB/s" : key==="proc" ? val : val+"%";
+    document.getElementById(key+"Bar").style.width=
+      Math.min(val,100)+"%";
+  }
+  document.getElementById("throughput").textContent=
+    (40+Math.random()*58).toFixed(1)+"%";
+}
+const graph=document.getElementById("graph");
+for(let i=0;i<42;i++) {
+  const bar=document.createElement("div");
+  bar.className="bar";
+  bar.style.height=(10+Math.random()*85)+"%";
+  graph.appendChild(bar);
+}
+setInterval(()=>{
+  document.querySelectorAll(".bar").forEach(bar=>{
+    bar.style.height=(8+Math.random()*90)+"%";
+  });
+},450);
+setInterval(update,1400);
+update();
+</script>
+</body>
+</html>
